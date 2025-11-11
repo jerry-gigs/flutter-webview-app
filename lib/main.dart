@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart' as mobile_webview;
 import 'package:webview_windows/webview_windows.dart' as windows_webview;
-import 'components/header_component.dart';
+//import 'components/header_component.dart';
 import 'services/webview_services.dart';
 
 void main() {
@@ -154,7 +154,7 @@ class _WebViewPageState extends State<WebViewPage> {
     }
   }
 
-  void _clearCache() async {
+  /*void _clearCache() async {
     try {
       await webViewService.clearCookies();
       if (!_isWindows) {
@@ -167,18 +167,18 @@ class _WebViewPageState extends State<WebViewPage> {
     } catch (e) {
       print('Error clearing cookies: $e');
     }
-  }
+  }*/
 
-  void _testGoogleSignup() {
+  /*void _testGoogleSignup() {
     webViewService.loadUrl('https://accounts.google.com/signup');
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop, // This handles the Android back button
       child: Scaffold(
-        appBar: AppBar(
+        /*appBar: AppBar(
           title: HeaderComponent(
             webViewService: webViewService,
             urlController: urlController,
@@ -186,7 +186,13 @@ class _WebViewPageState extends State<WebViewPage> {
             onTestGoogleSignup: _testGoogleSignup,
             onLoadUrl: _loadUrl,
           ),
-        ),
+        ),*/
+          appBar: AppBar(
+            toolbarHeight: 40, // We can adjust this as need be
+            backgroundColor: Colors.transparent, // We can change this as we update
+            elevation: 0, // no shadow
+              ),
+
         body: Stack(
           children: [
             _buildWebView(),
