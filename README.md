@@ -29,13 +29,21 @@ This project is ideal for scenarios where you want to wrap a web-based project (
 
 # Project structure
 lib/
+
 ├── services/
+
 │   ├── webview_services.dart
+
 │   └── version_check_service.dart
+
 ├── screens/
+
 │   └── update_required_screen.dart
+
 └── main.dart
+
 assets/
+
 └── version_check.json
 
 
@@ -43,7 +51,7 @@ assets/
 
 # Clone the repository:
 
-git clone https://github.com/<your-username>/webview-iframe-app.git
+git clone [https://github.com/<your-username>/webview-iframe-app.git](https://github.com/jerry-gigs/flutter-webview-app)
 cd webview-iframe-app
 
 
