@@ -51,7 +51,7 @@ assets/
 
 # Clone the repository:
 
-git clone [https://github.com/<your-username>/webview-iframe-app.git](https://github.com/jerry-gigs/flutter-webview-app)
+git clone https://github.com/jerry-gigs/flutter-webview-app
 cd webview-iframe-app
 
 
@@ -82,7 +82,7 @@ This project is licensed under the MIT License — feel free to use, modify, and
 
 # Author
 
-Jerry Okechukwu OJIMADU
+# Jerry Okechukwu OJIMADU
 GitHub: jerry-gigs | LinkedIn: Jerry Ojimadu
 
 url_launcher — to handle external links
