@@ -1,0 +1,9 @@
+lib/
+├── services/
+│   ├── webview_services.dart
+│   └── version_check_service.dart
+├── screens/
+│   └── update_required_screen.dart
+└── main.dart
+assets/
+└── version_check.json
