@@ -59,27 +59,32 @@ class _WebViewPageState extends State<WebViewPage> {
       await versionCheckService.initialize();
       
       setState(() {
-        _updateRequired = versionCheckService.isUpdateRequired;
+        _updateRequired = versionCheckService.isUpdateRequired && 
+                         (versionCheckService.updateInfo['force_update'] == true);
         _updateInfo = versionCheckService.updateInfo;
         _updateCheckComplete = true;
       });
       
+      // Only initialize WebView if no update is required
       if (!_updateRequired) {
-        // Only initialize WebView if no update is required
         await _initWebView();
       }
     } catch (e) {
       print('Version check error: $e');
-      // If version check fails, assume update is required for safety
+      // If version check fails, allow app to continue but log the error
       setState(() {
-        _updateRequired = true;
+        _updateRequired = false; // Don't block app if version check fails
         _updateCheckComplete = true;
         _updateInfo = {
           'title': 'Update Check Failed',
-          'message': 'Unable to verify app version. Please update to continue.',
-          'force_update': true,
+          'message': 'Unable to verify app version. Please check your connection.',
+          'force_update': false,
+          'error': e.toString(),
         };
       });
+      
+      // Initialize WebView even if version check fails
+      await _initWebView();
     }
   }
 
@@ -216,7 +221,10 @@ class _WebViewPageState extends State<WebViewPage> {
 
     // Show update required screen if update is needed
     if (_updateRequired) {
-      return UpdateRequiredScreen(updateInfo: _updateInfo);
+      return UpdateRequiredScreen(
+        updateInfo: _updateInfo,
+        onRetry: _checkForUpdates, // This allows retrying the version check
+      );
     }
 
     // Otherwise show normal WebView

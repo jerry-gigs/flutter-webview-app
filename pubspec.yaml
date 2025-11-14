@@ -33,6 +33,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.1.0
   google_sign_in: ^6.1.0
   #url_launcher: ^6.2.0
   webview_windows: ^0.3.0 # For window support
@@ -80,8 +81,7 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  assets:
-   - assets/version_check.json
+  # assets:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

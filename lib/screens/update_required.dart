@@ -1,41 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class UpdateRequiredScreen extends StatelessWidget {
+class UpdateRequiredScreen extends StatefulWidget {
   final Map<String, dynamic> updateInfo;
+  final VoidCallback? onRetry; // Optional retry callback
   
-  const UpdateRequiredScreen({super.key, required this.updateInfo});
+  const UpdateRequiredScreen({
+    super.key, 
+    required this.updateInfo,
+    this.onRetry,
+  });
   
-  Future<void> _launchUpdateURL(BuildContext context) async {
-    final url = updateInfo['update_url'];
+  @override
+  State<UpdateRequiredScreen> createState() => _UpdateRequiredScreenState();
+}
+
+class _UpdateRequiredScreenState extends State<UpdateRequiredScreen> {
+  bool _isLaunching = false;
+  
+  Future<void> _launchUpdateURL() async {
+    final url = widget.updateInfo['update_url'];
     print('🔄 Launching URL: $url');
     
-    if (url != null) {
-      try {
-        // Try to launch the URL directly without checking canLaunchUrl first
-        final Uri uri = Uri.parse(url);
-        
-        bool launched = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-        
-        if (!launched) {
-          print('❌ launchUrl returned false');
-          _showErrorDialog(context, 'Could not open the download link. Please try again.');
-        } else {
-          print('✅ URL launched successfully');
-        }
-      } catch (e) {
-        print('❌ Exception: $e');
-        _showErrorDialog(context, 'Error opening link: $e');
+    // Enhanced URL validation
+    if (url == null || url.toString().isEmpty) {
+      _showErrorDialog('Download link is not available. Please contact support.');
+      return;
+    }
+    
+    if (_isLaunching) return;
+    
+    setState(() => _isLaunching = true);
+    
+    try {
+      final Uri uri = Uri.parse(url.toString());
+      
+      bool launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      
+      if (!launched) {
+        print('❌ launchUrl returned false');
+        _showErrorDialog('Could not open the download link. Please try again.');
+      } else {
+        print('✅ URL launched successfully');
       }
-    } else {
-      _showErrorDialog(context, 'Download URL is not available.');
+    } catch (e) {
+      print('❌ Exception: $e');
+      _showErrorDialog('Error opening link: $e');
+    } finally {
+      setState(() => _isLaunching = false);
     }
   }
 
-  void _showErrorDialog(BuildContext context, String message) {
+  void _showErrorDialog(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -49,6 +68,39 @@ class UpdateRequiredScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+  
+  void _showExitDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Required'),
+        content: const Text('You must update the app to continue using it.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _launchUpdateURL();
+            },
+            child: const Text('Update Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _retryVersionCheck() {
+    if (widget.onRetry != null) {
+      widget.onRetry!();
+    } else {
+      // Fallback: try to launch the URL again
+      _launchUpdateURL();
+    }
   }
   
   @override
@@ -68,7 +120,7 @@ class UpdateRequiredScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                updateInfo['title'] ?? 'Update Required',
+                widget.updateInfo['title'] ?? 'Update Required',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -78,7 +130,7 @@ class UpdateRequiredScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                updateInfo['message'] ?? 'Please update to the latest version to continue using the app.',
+                widget.updateInfo['message'] ?? 'Please update to the latest version to continue using the app.',
                 style: const TextStyle(
                   fontSize: 16,
                   color: Colors.white70,
@@ -86,83 +138,131 @@ class UpdateRequiredScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (updateInfo['current_app_version'] != null && updateInfo['min_required_version'] != null)
+              
+              // Enhanced version information
+              if (widget.updateInfo['current_app_version'] != null && 
+                  widget.updateInfo['min_required_version'] != null)
                 Column(
                   children: [
                     Text(
-                      'Your version: ${updateInfo['current_app_version']}',
+                      'Your version: ${widget.updateInfo['current_app_version']}',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Text(
-                      'Required version: ${updateInfo['min_required_version']}',
+                      'Required version: ${widget.updateInfo['min_required_version']}',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 14,
                       ),
                     ),
+                    // Show latest available version if available
+                    if (widget.updateInfo['current_remote_version'] != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          'Latest version: ${widget.updateInfo['min_required_version']}',
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 24),
                   ],
                 ),
+              
+              // Update button with loading state
               ElevatedButton(
-                onPressed: () => _launchUpdateURL(context),
+                onPressed: _isLaunching ? null : _launchUpdateURL,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.orange,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  minimumSize: const Size(200, 50),
                 ),
-                child: const Text(
-                  'UPDATE NOW',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: _isLaunching
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const Text(
+                        'UPDATE NOW',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
               const SizedBox(height: 16),
-              TextButton(
-                onPressed: () {
-                  if (updateInfo['force_update'] == true) {
-                    _showExitDialog(context);
-                  }
-                },
-                child: const Text(
-                  'Not Now',
-                  style: TextStyle(
-                    color: Colors.white54,
+              
+              // Not Now button (only shows if force_update is false)
+              if (widget.updateInfo['force_update'] != true)
+                TextButton(
+                  onPressed: () {
+                    // Allow user to continue if update is not forced
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Not Now',
+                    style: TextStyle(
+                      color: Colors.white54,
+                    ),
                   ),
                 ),
-              ),
+              
+              // Exit App button (shows when force_update is true)
+              if (widget.updateInfo['force_update'] == true)
+                TextButton(
+                  onPressed: _showExitDialog,
+                  child: const Text(
+                    'Not Now',
+                    style: TextStyle(
+                      color: Colors.white54,
+                    ),
+                  ),
+                ),
+              
+              // Retry button (shows when there's an error)
+              if (widget.updateInfo['error'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: TextButton(
+                    onPressed: _retryVersionCheck,
+                    child: const Text(
+                      'Retry Check',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              
+              // Show error message if exists
+              if (widget.updateInfo['error'] != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Error: ${widget.updateInfo['error']}',
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontSize: 12,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
             ],
           ),
         ),
-      ),
-    );
-  }
-  
-  void _showExitDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Update Required'),
-        content: const Text('You must update the app to continue using it.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('CANCEL'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _launchUpdateURL(context);
-            },
-            child: const Text('UPDATE NOW'),
-          ),
-        ],
       ),
     );
   }
