@@ -1,7 +1,7 @@
 {
   "min_required_version": "1.0.0",
   "current_version": "1.0.0",
-  "update_urls": {
+  "updte_urls": {
     "android": "https://play.google.com/",
     "ios": "https://apps.apple.com/",
     "fallback": "https://drive.google.com/uc?export=download&id=1bDAzk3bjeimsb7EeHs4bP-bETdwhnK0p"
