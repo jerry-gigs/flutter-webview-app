@@ -1,0 +1,47 @@
+name: Build Jekyll Pages
+
+# Prevent multiple overlapping runs from canceling each other
+concurrency:
+  group: jekyll-build
+  cancel-in-progress: false
+
+# Trigger the workflow on pushes to main (or master)
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Allows manual trigger from Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout your repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Ruby (needed for Jekyll)
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2' # adjust if needed
+          bundler-cache: true
+
+      # Step 3: Install Jekyll dependencies
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      # Step 4: Build the Jekyll site
+      - name: Build Jekyll site
+        run: bundle exec jekyll build
+
+      # Step 5: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_site
