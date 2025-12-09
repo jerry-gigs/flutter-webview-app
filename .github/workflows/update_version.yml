@@ -1,0 +1,35 @@
+name: Update Version JSON
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version_control.json
+        run: |
+          jq --arg version "${{ steps.version.outputs.version }}" \
+            '.current_version = $version' \
+            version_control.json > tmp.$$.json && mv tmp.$$.json version_control.json
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git add version_control.json
+          git commit -m "Auto-update version_control.json to ${{ steps.version.outputs.version }}" || echo "No changes"
+          git push
